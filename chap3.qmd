@@ -853,3 +853,76 @@ posterior <- posterior / sum(posterior)
 plot(p_grid, posterior, type = "l")
 p_grid[which.max(posterior)]
 ```
+
+**3H2.**\
+
+`sample` 関数を用いて、上で計算した事後分布から1万個のランダムなパラメータ値を抽出せよ。そのサンプルを用いて、50%、89%、97%の最高事後密度区間（HPDI）を推定せよ。
+
+```{r}
+samples <- sample(p_grid, prob = posterior, size = 1e4, replace = TRUE)
+HPDI(samples, prob = 0.5)
+HPDI(samples, prob = 0.89)
+HPDI(samples, prob = 0.97)
+
+```
+
+**3H3.**\
+
+`rbinom` を用いて、200回の出生を1セットとするシミュレーションを1万回行え。結果として、1万個の数値（それぞれが200回の出生における男児数）を得ることになる。予測された男児数の分布を、実際のデータにおける男児数（200回中111人）と比較せよ。シミュレーション結果を可視化する方法はいくつもあるが、この場合は `dens` コマンド（rethinkingパッケージの一部）がおそらく最も簡単である。このモデルはデータにうまく適合しているように見えるか？すなわち、予測分布は実際の観測値を中央付近のもっともらしい結果として含んでいるか？
+
+```{r}
+
+result <- rep(NA, 1e4)
+
+for (i in 1:1e4){
+  p <- sample(p_grid, prob = posterior, size = 1, replace = TRUE)  
+  result[i] <- rbinom(1, size = 200, prob = p)
+}
+  
+dens(result)
+
+
+
+```
+
+**3H4.**\
+
+今度は、**第1子だけに注目した100回の出生**を1セットとしてシミュレーションを1万回行い、それぞれのシミュレーションで得られた男児数（1万個）を、実データにおける第1子の男児数（`birth1`）と比較せよ。この観点から見ると、このモデルはどのように見えるか？
+
+```{r}
+p_grid <- seq(from = 0, to = 1, length.out = 1000)
+prior <- rep(1, 1000)
+likelihood <- dbinom(sum(birth1) + sum(birth2), length(birth1) + length(birth2) , prob = p_grid)
+posterior <- prior * likelihood
+posterior <- posterior / sum(posterior)
+
+result <- rep(NA, 1e4)
+
+for (i in 1:1e4){
+  p <- sample(p_grid, prob = posterior, size = 1, replace = TRUE)  
+  result[i] <- rbinom(1, size = 100, prob = p)
+}
+  
+mean(result) # シミュレーションから求められる第1子の男児数
+sum(birth1) # 実データでの第1子の男児数
+
+
+mean(result <= sum(birth1)) 
+```
+
+**3H5.**\
+
+このモデルは、第1子と第2子の性別が独立であると仮定している。この仮定を検証するために、今度は**第1子が女児だった場合の第2子**に注目せよ。女児の後に生まれた第2子に限定して、男児数について1万回のシミュレーション結果と実データを比較せよ。これを正しく行うためには、まず第1子が女児であった回数を数え、その回数だけ出生をシミュレーションすることを1万回繰り返す必要がある。シミュレーションで得られた男児数を、実際に「女児の後に生まれた第2子の男児数」と比較せよ。この観点から見ると、このモデルはどのように見えるか？また、このデータで何が起きていると考えられるか？
+
+```{r}
+male_female <-  sum(birth1 == 0 & birth2 == 1) # 女児の後に生まれた第2子の男児数
+
+result <- rep(NA, 1e4)
+
+for (i in 1:1e4){
+  p <- sample(p_grid, prob = posterior, size = 1, replace = TRUE)  
+  result[i] <- rbinom(1, size = sum(birth1 == 0), prob = p)
+}
+
+mean(result <= male_female)
+```
