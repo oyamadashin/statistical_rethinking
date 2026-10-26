@@ -1,0 +1,17 @@
+---
+title: "practice"
+output: html_document
+date: "2026-10-01"
+---
+
+```{r}
+x <- sample(0:1,100,replace=TRUE)
+table(x)
+```
+
+```{r}
+coin <- c("表", "裏")
+x <- sample(coin, 100, replace = TRUE)
+table(x)
+```
+

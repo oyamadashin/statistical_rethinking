@@ -4,9 +4,107 @@ output: html_document
 date: "2026-04-25"
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+# library
+
+```{r}
+library(rethinking)
 ```
+
+# 2.4. Making the model go
+
+## 2.4.3 Grid approximation
+
+```{r}
+# グリッドを定義する
+p_grid <- seq(from = 0, to = 1, length.out = 20)
+
+# priorを定義する(確率密度はどれも1)
+prior <- rep(1, 20)
+
+# グリッドの各値について尤度を求める
+# 9回地球儀を投げてWが6回、Lが3回、という状況
+likelihood <- dbinom(6, size = 9, prob = p_grid)
+
+# 標準化前のposterior
+unstd_posterior <- likelihood * prior
+
+# 標準化したposterior
+posterior <- unstd_posterior / sum(unstd_posterior)
+
+
+plot(p_grid, posterior, type = "b")
+```
+
+
+
+
+```{r}
+# pの候補を200個つくる
+p_grid <- seq(from = 0, to = 1, length.out = 200)
+
+# 200個すべてに同じ重みを与える
+prior <- rep(1, 200)
+
+# 各pについて、9回中6回Wが出る確率
+likelihood <- dbinom(6, size = 9, prob = p_grid)
+
+# 事後確率(正規化前)
+unstd_posterior <- likelihood * prior
+
+# 事後確率（正規化後）
+posterior <- unstd_posterior / sum(unstd_posterior)
+
+plot(p_grid, prior, type = "l")
+plot(p_grid, posterior, type = "l")
+```
+
+```{r}
+# pの候補を200個つくる
+p_grid <- seq(from = 0, to = 1, length.out = 200)
+
+# p <- 0.5のケースはなしとする
+prior <- ifelse(p_grid < 0.5, 0, 1)
+
+# 各pについて、9回中6回Wが出る確率
+likelihood <- dbinom(6, size = 9, prob = p_grid)
+
+# 事後確率(正規化前)
+unstd_posterior <- likelihood * prior
+
+# 事後確率（正規化後）
+posterior <- unstd_posterior / sum(unstd_posterior)
+
+plot(p_grid, prior, type = "l")
+plot(p_grid, posterior, type = "l")
+```
+
+```{r}
+# pの候補を200個つくる
+p_grid <- seq(from = 0, to = 1, length.out = 200)
+
+# 0.5あたりを高く評価する
+prior <- exp(-5 * abs(p_grid - 0.5))
+
+# 各pについて、9回中6回Wが出る確率
+likelihood <- dbinom(6, size = 9, prob = p_grid)
+
+# 事後確率(正規化前)
+unstd_posterior <- likelihood * prior
+
+# 事後確率（正規化後）
+posterior <- unstd_posterior / sum(unstd_posterior)
+
+plot(p_grid, prior, type = "l")
+plot(p_grid, posterior, type = "l")
+```
+
+```{r}
+dbinom(6, size = 9, prob = 0.5)
+```
+
+
+
+
 
 ```{r}
 ways <- c(0, 3, 8, 9, 0)
@@ -302,5 +400,93 @@ posterior <- unstd.posterior / sum(unstd.posterior)
 plot(p_grid, posterior, type = "b",
      xlab = "海の確率", ylab = "事後確率")
 mtext("20 points")
+```
+
+
+## 2.4.4 Quadratic approximation(二次近似)
+
+```{r}
+library(rethinking)
+
+# quap()は、指定されたモデルからposteriorのピークを探し、その周辺を
+# 正規分布で近似する
+globe_qa <- quap(
+  alist(
+    W ~ dbinom(W + L, p), # 尤度
+    p ~ dunif(0, 1) # prior
+  ),
+  data = list(W = 6, L = 3)
+)
+
+precis(globe_qa)
+```
+
+平均付近は0.67, 標準偏差0.16
+
+注：これは本当のposteriorそのものではなく、「posteriorは正規分布だ」と仮定して要約した結果。
+
+```{r}
+W <- 6
+L <- 3
+
+# 真のposteriorの分布
+curve(dbeta(x, W + 1, L + 1),
+      from = 0, to = 1)
+
+# quadratic approximationで求めた平均と標準偏差をしよう
+curve(dnorm(x, 0.67, 0.16),
+      lty = 2, add = TRUE)
+```
+
+陸を1回でも観測しているので、「地球全部が水」はあり得ない。
+
+しかし正規分布近似は0〜1という境界を知りません。
+
+そのため、p>1の側にも理論上は密度を置いてしまいます。
+
+
+## 2.4.5 Markov chain Monte Carlo.
+
+MCMCは、事後分布そのものを直接求めようとはしません。
+
+代わりに、事後分布からパラメータ値をたくさんサンプリングする
+
+という方法を取ります。
+
+
+ある範囲の値が頻繁に出てくるなら、その範囲の事後確率が高いと考えます。
+
+```{r}
+n_samples <- 10000
+p <- rep(NA, n_samples)
+
+# p = 0.5からスタート
+p[1] <- 0.5
+
+W <- 6
+L <- 3
+
+for(i in 2:n_samples){
+  p_new <- rnorm(1, p[i-1], 0.1) # 今いる場所から少し動いて新しいp候補を探す
+  
+  if(p_new < 0) p_new <- abs(p_new)
+  if(p_new > 1) p_new <- 2 - p_new
+  
+  q0 <- dbinom(W, W + L, p[i - 1])
+  q1 <- dbinom(W, W+L, p_new)
+  
+  p[i] <- ifelse(runif(1) < q1/q0, p_new, p[i-1])
+  # ここで、q1/q0は、尤度が改善したかどうかを示す。
+  # ひたすら改善だけを目指すなら条件式は 1 < q1/q0にするべき
+  # しかしそれだと局所的なピークにはまることもある。
+  # 不等式の左辺を1ではなく乱数にすることで、低い場所に移動する可能性も残す
+}
+
+```
+
+
+```{r}
+dens(p, xlim = c(0, 1))
+curve(dbeta(x, W + 1, L + 1), lty = 2, add = TRUE)
 ```
 
