@@ -490,3 +490,159 @@ dens(p, xlim = c(0, 1))
 curve(dbeta(x, W + 1, L + 1), lty = 2, add = TRUE)
 ```
 
+# 2.6. Practice
+
+## 2M1
+
+```{r}
+### W, W, Wの場合のグリッド近似
+
+
+# グリッドを定義する
+p_grid <- seq(from = 0, to = 1, length.out = 20)
+
+# priorを定義する(確率密度はどれも1)
+prior <- rep(1, 20)
+
+# グリッドの各値について尤度を求める
+# 3回地球儀を投げてWが3回、Lが0回、という状況
+likelihood <- dbinom(3, size = 3, prob = p_grid)
+
+# 標準化前のposterior
+unstd_posterior <- likelihood * prior
+
+# 標準化したposterior
+posterior <- unstd_posterior / sum(unstd_posterior)
+
+
+plot(p_grid, posterior, type = "b")
+```
+
+```{r}
+### W, W, W, Lの場合のグリッド近似
+
+
+# グリッドを定義する
+p_grid <- seq(from = 0, to = 1, length.out = 20)
+
+# priorを定義する(確率密度はどれも1)
+prior <- rep(1, 20)
+
+# グリッドの各値について尤度を求める
+# 4回地球儀を投げてWが3回、Lが1回、という状況
+likelihood <- dbinom(3, size = 4, prob = p_grid)
+
+# 標準化前のposterior
+unstd_posterior <- likelihood * prior
+
+# 標準化したposterior
+posterior <- unstd_posterior / sum(unstd_posterior)
+
+
+plot(p_grid, posterior, type = "b")
+```
+
+
+```{r}
+### L, W, W, L, W, W, Wの場合のグリッド近似
+
+
+# グリッドを定義する
+p_grid <- seq(from = 0, to = 1, length.out = 20)
+
+# priorを定義する(確率密度はどれも1)
+prior <- rep(1, 20)
+
+# グリッドの各値について尤度を求める
+# 7回地球儀を投げてWが5回、Lが2回、という状況
+likelihood <- dbinom(5, size = 7, prob = p_grid)
+
+# 標準化前のposterior
+unstd_posterior <- likelihood * prior
+
+# 標準化したposterior
+posterior <- unstd_posterior / sum(unstd_posterior)
+
+
+plot(p_grid, posterior, type = "b")
+```
+
+
+## 2M2
+
+```{r}
+### W, W, Wの場合のグリッド近似(p < 0.5 のとき、事前確率は0とする)
+
+
+# グリッドを定義する
+p_grid <- seq(from = 0, to = 1, length.out = 20)
+
+# priorを定義する(確率密度は、p<0.5では0, それ以外は1)
+prior <- ifelse(p_grid < 0.5, 0, 1)
+
+# グリッドの各値について尤度を求める
+# 3回地球儀を投げてWが3回、Lが0回、という状況
+likelihood <- dbinom(3, size = 3, prob = p_grid)
+
+# 標準化前のposterior
+unstd_posterior <- likelihood * prior
+
+# 標準化したposterior
+posterior <- unstd_posterior / sum(unstd_posterior)
+
+
+plot(p_grid, posterior, type = "b")
+```
+
+```{r}
+### W, W, W, Lの場合のグリッド近似(p < 0.5 のとき、事前確率は0とする)
+
+
+# グリッドを定義する
+p_grid <- seq(from = 0, to = 1, length.out = 20)
+
+# priorを定義する(確率密度は、p<0.5では0, それ以外は1)
+prior <- ifelse(p_grid < 0.5, 0, 1)
+
+# グリッドの各値について尤度を求める
+# 4回地球儀を投げてWが3回、Lが1回、という状況
+likelihood <- dbinom(3, size = 4, prob = p_grid)
+
+# 標準化前のposterior
+unstd_posterior <- likelihood * prior
+
+# 標準化したposterior
+posterior <- unstd_posterior / sum(unstd_posterior)
+
+
+plot(p_grid, posterior, type = "b")
+```
+
+
+```{r}
+### L, W, W, L, W, W, Wの場合のグリッド近似(p < 0.5 のとき、事前確率は0とする)
+
+
+# グリッドを定義する
+p_grid <- seq(from = 0, to = 1, length.out = 20)
+
+# priorを定義する(確率密度は、p<0.5では0, それ以外は1)
+prior <- ifelse(p_grid < 0.5, 0, 1)
+
+# グリッドの各値について尤度を求める
+# 7回地球儀を投げてWが5回、Lが2回、という状況
+likelihood <- dbinom(5, size = 7, prob = p_grid)
+
+# 標準化前のposterior
+unstd_posterior <- likelihood * prior
+
+# 標準化したposterior
+posterior <- unstd_posterior / sum(unstd_posterior)
+
+
+plot(p_grid, posterior, type = "b")
+```
+
+
+## 2M3
+
