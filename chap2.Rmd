@@ -644,5 +644,9 @@ plot(p_grid, posterior, type = "b")
 ```
 
 
-## 2M3
+2M3は手計算
+
+
+## 2M4
+
 
