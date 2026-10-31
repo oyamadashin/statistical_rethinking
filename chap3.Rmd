@@ -168,4 +168,91 @@ mean(samples > 0.8)
 ```{r}
 mean(0.2<samples & samples<0.8)
 ```
+```{r}
+quantile(samples, 0.2)
+```
+
+```{r}
+quantile(samples, 0.8)
+
+```
+
+```{r}
+dens(samples)
+HPDI(samples, 0.66)
+PI(samples, 0.66)
+```
+```{r}
+p_grid <- seq(from=0, to=1, length.out = 1000)
+prior <- rep(1, 1000)
+likelihood <- dbinom(8, size=15, prob=p_grid)
+posterior <- prior * likelihood
+posterior <- posterior / sum(posterior)
+plot(p_grid, posterior, type="l")
+```
+```{r}
+ps <- sample(p_grid, prob = posterior, size = 1e4, replace = TRUE)
+dens(ps)
+HPDI(ps, prob = 0.9)
+
+```
+
+```{r}
+mean(rbinom(1e4, size = 15, prob = ps) == 8)
+
+
+```
+
+```{r}
+mean(rbinom(1e4, size = 9, prob = ps) == 6)
+```
+
+```{r}
+p_grid <- seq(from=0, to=1, length.out = 1000)
+prior <- rep(1, 1000)
+likelihood <- dbinom(8, size=15, prob=p_grid)
+posterior <- prior * likelihood
+posterior <- posterior / sum(posterior)
+
+ps <- sample(p_grid, prob = posterior, size = 1e4, replace = TRUE)
+interval <- PI(ps, prob = 0.99)
+diff(interval)
+
+```
+
+```{r}
+N <- 2500
+W <- rbinom(1, size = N, prob = 0.7)
+
+p_grid <- seq(from=0, to=1, length.out=1000)
+prior <- rep(1, 1000)
+likelihood <- dbinom(W, size = N, prob = p_grid)
+posterior <- prior*likelihood
+posterior <- posterior/sum(posterior)
+
+ps <- sample(p_grid, prob=posterior, size = 1e4, replace = TRUE)
+interval <- PI(ps, prob=0.99)
+diff(interval)
+dens(ps)
+```
+
+```{r}
+library(rethinking)
+data(homeworkch3)
+
+birth1
+birth2
+sum(birth1) + sum(birth2)
+```
+
+```{r}
+p_grid <- seq(from = 0, to = 1, length.out = 1000)
+prior <- rep(1, 1000)
+likelihood <- dbinom(sum(birth1) + sum(birth2), size = length(birth1) + length(birth2), prob = p_grid)
+
+posterior <- prior * likelihood
+posterior <- posterior / sum(posterior)
+
+plot(p_grid, posterior, type="l")
+```
 
