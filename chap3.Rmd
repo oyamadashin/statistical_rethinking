@@ -254,5 +254,35 @@ posterior <- prior * likelihood
 posterior <- posterior / sum(posterior)
 
 plot(p_grid, posterior, type="l")
+
+p_grid[which.max(posterior)]
+```
+
+```{r}
+ps <- sample(p_grid, prob = posterior, 10000, replace = TRUE)
+dens(ps)
+HPDI(ps, prob = 0.5)
+HPDI(ps, prob = 0.89)
+HPDI(ps, prob = 0.97)
+```
+```{r}
+boys_sim <- rbinom(10000, size = 200, prob = ps)
+dens(boys_sim)
+```
+
+```{r}
+birth1_sim <- rbinom(10000, size = 100, prob = ps)
+dens(birth1_sim)
+abline(v = sum(birth1), col = "red", lwd = 2)
+sum(birth1)
+```
+
+```{r}
+N_first_girl <- sum(birth1 == 0)
+N_girl_boy <- sum((birth1 == 0) * (birth2 == 1))
+
+girl_boy_sim <- rbinom(10000, size = N_first_girl, prob = ps)
+dens(girl_boy_sim)
+abline(v = N_girl_boy, col = "red", lwd = 2)
 ```
 
