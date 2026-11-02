@@ -1,0 +1,44 @@
+---
+title: "chap4"
+output: html_document
+date: "2026-11-02"
+---
+
+```{r}
+library(rethinking)
+```
+
+```{r}
+
+pos <- replicate(10000, sum(runif(16, -1, 1)))
+hist(pos)
+```
+
+```{r}
+growth <- replicate(1000, prod(1 + runif(12, 0, 0.1)))
+dens(growth, norm.comp=TRUE)
+```
+
+```{r}
+big <- replicate(1000, prod(1 + runif(12, 0, 0.5)))
+small <- replicate(1000, prod(1 + runif(12, 0, 0.01)))
+
+dens(big, norm.comp=TRUE)
+dens(small, norm.comp=TRUE)
+```
+
+```{r}
+log_big <- replicate(1000, 
+          log(prod(1 + runif(12, 0, 0.5))))
+
+dens(log_big, norm.comp=TRUE)
+```
+
+```{r}
+curve(exp(-x^2), from = -3, to = 3)
+```
+
+```{r}
+dnorm(0, 0, 0.1)
+  ```
+
