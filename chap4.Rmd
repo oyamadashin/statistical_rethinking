@@ -240,3 +240,102 @@ plot(post2$mu, post2$sigma,
 plot(d2$height, d2$weight)
 ```
 
+
+```{r}
+set.seed(2971)
+N <- 100
+a <- rnorm(N, 178, 20)
+b <- rnorm(N, 0, 10)
+```
+
+
+```{r}
+plot(NULL, xlim=range(d2$weight), ylim=c(-100, 400),
+     xlab="weight", ylab="height")
+abline(h=0, lty=2)
+abline(h=272, lty=1, lwd=0.5)
+mtext("b ~ dnorm(0, 100")
+
+
+xbar <- mean(d2$weight)
+
+for (i in 1:N)
+  curve(a[i] + b[i]*(x-xbar),
+        from=min(d2$weight),
+        to=max(d2$weight),
+        add=TRUE,
+        col=col.alpha("black", 0.2))
+```
+
+```{r}
+b <- rlnorm(1e4, 0, 1)
+dens(b, xlim=c(0,5), adj=0.1)
+```
+
+```{r}
+set.seed(2971)
+N <- 100
+a <- rnorm(N, 178, 20)
+b <- rlnorm(N, 0, 1)
+
+plot(NULL, xlim=range(d2$weight), ylim=c(-20, 250),
+     xlab="weight", ylab="height")
+abline(h=0, lty=2)
+abline(h=272, lty=1, lwd=0.5)
+mtext("b ~ dnorm(0, 100")
+
+
+xbar <- mean(d2$weight)
+
+for (i in 1:N)
+  curve(a[i] + b[i]*(x-xbar),
+        from=min(d2$weight),
+        to=max(d2$weight),
+        add=TRUE,
+        col=col.alpha("black", 0.2))
+```
+
+```{r}
+library(rethinking)
+data(Howell1)
+d <- Howell1
+d2 <- d[d$age <= 18, ]
+
+# 平均体重を定義
+xbar <- mean(d2$weight)
+
+# モデルを推定
+m4.3 <- quap(
+  alist(
+    height ~ dnorm(mu, sigma),
+    mu <- a + b*(weight - xbar),
+    a ~ dnorm(178, 20),
+    b ~ dlnorm(0, 1),
+    sigma ~ dunif(0, 50)
+  ),
+  data=d2
+)
+```
+
+
+```{r}
+post <- extract.samples(m4.3, n=1e4)
+
+mu_50 <- post$a + post$b*(50 - xbar)
+
+dens(mu_50)
+PI(mu_50)
+
+```
+
+```{r}
+height_50 <- rnorm(
+  1e4,
+  mean=mu_50,
+  sd=post$sigma
+)
+
+dens(height_50)
+PI(height_50)
+```
+
