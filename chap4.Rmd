@@ -796,5 +796,29 @@ shade(mu_PI, d2$year,
 ```
 
 
+```{r}
+sample_mu <- rnorm(1e4, 0, 10)
+sample_sigma <- rexp(1e4, rate=1)
+prior_y <- rnorm(1e4, mean = sample_mu, sd = sample_sigma)
 
+prior_y |> hist()
+```
+
+
+```{r}
+sample_sigma <- rexp(1e4, rate = 0.1)
+prior_y <- rnorm(1e4, mean = sample_mu, sd = sample_sigma)
+hist(prior_y)
+```
+
+```{r}
+alist(
+    y ~ rnorm(1e4, mean = sample_mu, sd = sample_sigma)
+    mu ~ dnorm(0, 10),
+    sigma ~ dexp(rate=1)
+  )
+
+
+
+```
 
